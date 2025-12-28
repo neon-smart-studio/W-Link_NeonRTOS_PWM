@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link href="favicon.ico" rel="SHORTCUT ICON">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <title>儀表板</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="stylesheet" type="text/css" href="./css/metro-bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap-toggle.min.css">
+    <link rel="stylesheet" type="text/css" href="./css/font-awesome.min.css">
+    <!-- documentation styles -->
+    <link rel="stylesheet" type="text/css" href="./css/docs.css">
+    <link rel="stylesheet" type="text/css" href="./css/color.css">
+    <link rel="stylesheet" type="text/css" href="./css/range-slider.css">
+
+    <script type="text/javascript" src="./js/jquery-3.0.0.min.js"></script>
+    <script type="text/javascript" src="./js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="./js/bootstrap-toggle.min.js"></script>
+    <script type="text/javascript" src="./js/LED_PWM.js"></script>
+    
+<style>
+body{
+    min-height: 0px;
+}
+
+</style>
+
+<script type="text/javascript">
+var ws_get_sb = null;
+
+  var wsUri = "ws://"+window.location.host;
+  
+  function ws_connect()
+  {
+    websocket = new WebSocket(wsUri);
+    websocket.onopen = function(evt) { onOpen(evt); };
+    websocket.onclose = function(evt) { onClose(evt); };
+    websocket.onmessage = function(evt) { onMessage(evt); };
+    websocket.onerror = function(evt) { onError(evt); };
+  }
+  
+  function ws_init()
+  {
+    ws_connect();
+  }
+  
+  function onOpen(evt)
+  {
+    GET_All_LED_Status(function(rsp_json){
+        Print_LED_Control_List(rsp_json);
+        Update_LED_Status(rsp_json);
+    });
+  }
+
+  function onClose(evt)
+  {
+    ws_connect();
+  }
+
+  function onMessage(evt)
+  {
+    var rsp_json = JSON.parse(evt.data);
+    
+    if(rsp_json.method!=null){
+        var method = rsp_json.method;
+        
+        switch(method){
+            case "POST":
+                if(rsp_json.command!=null){
+                    switch(rsp_json.command){
+                      case "report leds status change":
+                        Update_LED_Status(rsp_json);
+                        break;
+                    }
+                }
+                break;
+            case "GET_RSP":
+                if(ws_get_sb!=null){
+                    ws_get_sb(rsp_json);
+                }
+                break;
+        }
+    }
+  }
+
+  function onError(evt)
+  {
+  }
+
+  function doSend(message)
+  {
+    websocket.send(message);
+  }
+
+$(document).ready(function(){
+    UI_is_updating = false;
+    ws_init();
+});
+
+function Websocket_Send_POST_Command(topic, command)
+{
+        var cmd = command;
+        cmd.method = "POST";
+        cmd.topic = topic;
+        doSend(JSON.stringify(cmd));
+}
+
+function Websocket_Send_GET_Command(topic, command, call_back)
+{
+        var cmd = command;
+        cmd.method = "GET";
+        cmd.topic = topic;
+        ws_get_sb = call_back;
+        doSend(JSON.stringify(cmd));
+}
+
+function Print_LED_Control_List(json_rsp_dat)
+{
+    var em_valve_switch_print = [];
+    
+    for(var i = 0; i<json_rsp_dat.num_of_leds; i++)
+    {
+        em_valve_switch_print.push("<div class=\"thumbnail tile tile-wide tile-pumpkin\">");
+        em_valve_switch_print.push("<div class=\"row\">");
+        em_valve_switch_print.push("<h2 style=\"margin: 0px auto;\">LED "+(i+1)+"</h2>");
+        em_valve_switch_print.push("</div>");
+        em_valve_switch_print.push("<div class=\"row\" style=\"margin-top: 10px\">");
+        em_valve_switch_print.push("<input type=\"checkbox\" id=\"individual_sw"+i+"_on_off\" onchange=\"onClick_Individual_On_Off_SW("+i+")\" data-toggle=\"toggle\">");
+        em_valve_switch_print.push("</div>");
+        em_valve_switch_print.push("<div class=\"row\" style=\"margin-top: 15px\">");
+        em_valve_switch_print.push("<input id=\"range-slider__range_"+i+"\" class=\"range-slider__range\" style=\"width: 80%;margin: 0 auto;\" data-hint=\"level\" id=\"led_ctrl_lvl\" type=\"range\" value=\"0\" min=\"0\" max=\"100\" onchange=\"onClick_LED_PWM_Slider("+i+", this.id)\">");
+        em_valve_switch_print.push("</div>");
+        
+        
+        em_valve_switch_print.push("</div>");
+    }
+    $("#leds_list").html("");
+    $("#leds_list").html(em_valve_switch_print.join(''));
+    
+    for(var i = 0; i<json_rsp_dat.num_of_leds; i++)
+    {
+        $("#individual_sw"+i+"_on_off").bootstrapToggle({
+          on: '開啟',
+          off: '關閉',
+          size: 'large',
+          onstyle: 'warning',
+          offstyle: 'danger',
+          width: '150',
+          height: '50'
+        });
+    }
+}
+
+function Update_LED_Status(json_rsp_dat)
+{
+    var i;
+    UI_is_updating = true;
+    var led_index;
+    for(i = 0; i<json_rsp_dat.num_of_leds; i++){
+        led_index = json_rsp_dat.all_led_status[i].led_index;
+          $("#individual_sw"+led_index+"_on_off").prop("checked", json_rsp_dat.all_led_status[i].on_off).change();
+          $("#range-slider__range_"+i+"").prop("value", json_rsp_dat.all_led_status[led_index].level);
+    }
+    UI_is_updating = false;
+}
+
+function onClick_Individual_On_Off_SW(led_index)
+{
+    if(UI_is_updating){return;}
+    Set_Individual_LED_On_Off(led_index, $("#individual_sw"+led_index+"_on_off").prop("checked"));
+}
+
+function onClick_LED_PWM_Slider(index, id_str)
+{
+  Set_Individual_LED_level(index, $('#'+id_str).val());
+}
+
+</script>
+
+</head>
+
+<body>
+        
+        
+    <nav class="navbar navbar-inverse navbar-static-top bsnavbar">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="#"><h4>儀表板</h4></a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse navbar-ex1-collapse">
+              <ul class="nav navbar-nav">
+                <li class="active"><a href="#"><h4>LED</h4></a></li>
+              </ul>
+              <ul class="nav navbar-nav navbar-right">
+              </ul>
+            </div><!-- /.navbar-collapse -->
+        </div>
+    </nav>
+    
+    <div class="container">
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-11">
+            <h1 class="nephritis">LED狀態</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-1"></div>
+
+        <div class="col-md-11">
+            
+           <h2 class="nephritis">個別開關</h2><br>
+           <div id="leds_list"></div>
+        </div>
+        
+    </div>
+    </div>
+    
+</body>
+</html>
