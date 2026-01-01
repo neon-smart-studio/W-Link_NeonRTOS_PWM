@@ -222,7 +222,7 @@ hwSPI_OpResult SPI_Master_Init(hwSPI_Index index, uint32_t clock_rate_hz, hwSPI_
 
         if(miso_soc_pin==0 || miso_soc_base==NULL || mosi_soc_pin==0 || mosi_soc_base==NULL || sclk_soc_pin==0 || sclk_soc_base==NULL)
         {
-                return hwGPIO_InvalidParameter;
+                return hwSPI_InvalidParameter;
         }
 
         if(SPI_Pin_Def_Table[index][SPI_Index_Map_Alt[index]].cs_pin!=hwGPIO_Pin_NC)
@@ -232,7 +232,7 @@ hwSPI_OpResult SPI_Master_Init(hwSPI_Index index, uint32_t clock_rate_hz, hwSPI_
                 
                 if(cs_soc_pin==0 || cs_soc_base==NULL)
                 {
-                        return hwGPIO_InvalidParameter;
+                        return hwSPI_InvalidParameter;
                 }
         }
 
@@ -243,7 +243,7 @@ hwSPI_OpResult SPI_Master_Init(hwSPI_Index index, uint32_t clock_rate_hz, hwSPI_
 
         if(mosi_af==0 || miso_af==0 || sclk_af==0)
         {
-                return hwGPIO_InvalidParameter;
+                return hwSPI_InvalidParameter;
         }
 
         if(SPI_Pin_Def_Table[index][SPI_Index_Map_Alt[index]].cs_pin!=hwGPIO_Pin_NC)
@@ -252,14 +252,14 @@ hwSPI_OpResult SPI_Master_Init(hwSPI_Index index, uint32_t clock_rate_hz, hwSPI_
                 
                 if(cs_af==0)
                 {
-                        return hwGPIO_InvalidParameter;
+                        return hwSPI_InvalidParameter;
                 }
         }
 
         SPI_TypeDef * spi_soc_base = SPI_Map_Soc_Base(index);
         if(spi_soc_base==NULL)
         {
-                return hwGPIO_InvalidParameter;
+                return hwSPI_InvalidParameter;
         }
 
         if(NeonRTOS_SyncObjCreate(&Spi_Master_Send_SyncHandle[index])!=NeonRTOS_OK)
@@ -388,7 +388,10 @@ hwSPI_OpResult SPI_Master_Init(hwSPI_Index index, uint32_t clock_rate_hz, hwSPI_
         /*  Use the best fit pre-scaler */
         g_spi[index].Init.BaudRatePrescaler = Spi_Master_Baudrate_Prescaler_Table[prescaler_rank];
 
-        HAL_SPI_Init(&g_spi[index]);
+        if(HAL_SPI_Init(&g_spi[index])!=HAL_OK)
+        {
+                return hwSPI_HwError;
+        }
         
         switch(index)
         {
@@ -506,7 +509,7 @@ hwSPI_OpResult SPI_Master_DeInit(hwSPI_Index index)
 
         if(miso_soc_pin==0 || miso_soc_base==NULL || mosi_soc_pin==0 || mosi_soc_base==NULL || sclk_soc_pin==0 || sclk_soc_base==NULL)
         {
-                return hwGPIO_InvalidParameter;
+                return hwSPI_InvalidParameter;
         }
 
         if(Spi_Master_Use_CS[index]==true)
@@ -516,7 +519,7 @@ hwSPI_OpResult SPI_Master_DeInit(hwSPI_Index index)
                 
                 if(cs_soc_pin==0 || cs_soc_base==NULL)
                 {
-                        return hwGPIO_InvalidParameter;
+                        return hwSPI_InvalidParameter;
                 }
         }
 
@@ -652,7 +655,7 @@ hwSPI_OpResult SPI_Change_Frequency(hwSPI_Index index, uint32_t clock_rate_hz)
         SPI_TypeDef * spi_soc_base = SPI_Map_Soc_Base(index);
         if(spi_soc_base==NULL)
         {
-                return hwGPIO_InvalidParameter;
+                return hwSPI_InvalidParameter;
         }
 
         SPI_MASTER_MUTEX_LOCK(index, SPI_MASTER_MUTEX_ACCESS_TIMEOUT);
@@ -706,7 +709,7 @@ hwSPI_OpResult SPI_Change_Mode(hwSPI_Index index, hwSPI_OpMode opMode)
         SPI_TypeDef * spi_soc_base = SPI_Map_Soc_Base(index);
         if(spi_soc_base==NULL)
         {
-                return hwGPIO_InvalidParameter;
+                return hwSPI_InvalidParameter;
         }
 
         SPI_MASTER_MUTEX_LOCK(index, SPI_MASTER_MUTEX_ACCESS_TIMEOUT);

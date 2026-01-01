@@ -522,7 +522,7 @@ uint32_t I2C_Master_Get_Timing(hwI2C_Index index, hwI2C_Speed_Mode speed_mode)
 uint32_t STM32_I2C_GetAF(hwI2C_Index I2C, hwGPIO_Pin pin)
 {
     for (size_t i = 0; i < sizeof(I2C_Pin_AF_Map)/sizeof(I2C_Pin_AF_Map[0]); i++) {
-        if (I2C_Pin_AF_Map[i].I2C == I2C &&
+        if (I2C_Pin_AF_Map[i].i2c == I2C &&
             I2C_Pin_AF_Map[i].pin  == pin)
             return I2C_Pin_AF_Map[i].af;
     }
@@ -649,7 +649,7 @@ hwI2C_OpResult I2C_Master_Init(hwI2C_Index index, hwI2C_Speed_Mode speed_mode)
 
     if(sda_soc_pin==0 || sda_soc_base==NULL || scl_soc_pin==0 || scl_soc_base==NULL)
     {
-            return hwGPIO_InvalidParameter;
+            return hwI2C_InvalidParameter;
     }
 
     uint32_t sda_af = STM32_UART_GetAF(index, I2C_Pin_Def_Table[index][I2C_Index_Map_Alt[index]].sda_pin);
@@ -657,13 +657,13 @@ hwI2C_OpResult I2C_Master_Init(hwI2C_Index index, hwI2C_Speed_Mode speed_mode)
 
     if(sda_af==0 || scl_af==0)
     {
-            return hwGPIO_InvalidParameter;
+            return hwI2C_InvalidParameter;
     }
 
     I2C_TypeDef * i2c_soc_base = I2C_Map_Soc_Base(index);
     if(i2c_soc_base==NULL)
     {
-            return hwGPIO_InvalidParameter;
+            return hwI2C_InvalidParameter;
     }
 
     if(NeonRTOS_SyncObjCreate(&I2C_Master_Done_SyncHandle[index])!=NeonRTOS_OK)
@@ -735,7 +735,10 @@ hwI2C_OpResult I2C_Master_Init(hwI2C_Index index, hwI2C_Speed_Mode speed_mode)
     g_i2c[index].Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
     g_i2c[index].Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
-    HAL_I2C_Init(&g_i2c[index]);
+    if(HAL_I2C_Init(&g_i2c[index])!=HAL_OK)
+    {
+        return hwI2C_HwError;
+    }
 
     switch(index)
     {       
@@ -802,7 +805,7 @@ hwI2C_OpResult I2C_Master_DeInit(hwI2C_Index index)
 
     if(sda_soc_pin==0 || sda_soc_base==NULL || scl_soc_pin==0 || scl_soc_base==NULL)
     {
-            return hwGPIO_InvalidParameter;
+            return hwI2C_InvalidParameter;
     }
 
     switch(index)

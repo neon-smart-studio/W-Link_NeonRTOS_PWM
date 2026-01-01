@@ -22,10 +22,11 @@ typedef enum hwSPI_OpResult_t
   hwSPI_OK = 0,
   hwSPI_NotInit = -1,
   hwSPI_InvalidParameter = -2,
-  hwSPI_MemoryError = -3,
-  hwSPI_MutexTimeout = -4,
-  hwSPI_SlaveTimeout = -5,
-  hwSPI_Unsupport = -6,
+  hwSPI_HwError = -3,
+  hwSPI_MemoryError = -4,
+  hwSPI_MutexTimeout = -5,
+  hwSPI_SlaveTimeout = -6,
+  hwSPI_Unsupport = -7,
 }hwSPI_OpResult;
 
 hwSPI_OpResult SPI_Master_DummyByte(hwSPI_Index index);

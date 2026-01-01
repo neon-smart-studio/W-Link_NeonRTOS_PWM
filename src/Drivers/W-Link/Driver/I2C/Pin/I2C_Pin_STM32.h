@@ -12,7 +12,7 @@ typedef struct {
 } I2C_Pin_Def;
 
 typedef struct {
-    hwI2C_Index I2C;
+    hwI2C_Index i2c;
     hwGPIO_Pin pin;
     uint32_t af;
 } I2C_AF_Map;
