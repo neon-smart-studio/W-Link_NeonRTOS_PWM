@@ -13,6 +13,8 @@
 
 #include "ADC.h"
 
+#ifdef STM32
+
 #define ADC_VREF_MV     3300.0f
 #define ADC_MAX_COUNT   4095.0f
 
@@ -60,7 +62,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
         {
             item.raw  = HAL_ADC_GetValue(hadc);
 
-            NeonRTOS_MsgQWrite(&ADC_Channel_SyncQueue[inst], &item, 0);
+            NeonRTOS_MsgQWrite(&ADC_Channel_SyncQueue[inst], &item, NEONRT_NO_WAIT);
 
             break;
         }
@@ -100,12 +102,12 @@ hwADC_OpStatus hwADC_Channel_Init(hwADC_Channel_Index ch)
 
     GPIO_Enable_RCC_Clock(adc_soc_base);
 
-    GPIO_InitTypeDef adc_init = {0};
-    adc_init.Pin  = adc_soc_pin;
-    adc_init.Mode = GPIO_MODE_ANALOG;
-    adc_init.Pull = GPIO_NOPULL;
+    GPIO_InitTypeDef g_adc_pin = {0};
+    g_adc_pin.Pin  = adc_soc_pin;
+    g_adc_pin.Mode = GPIO_MODE_ANALOG;
+    g_adc_pin.Pull = GPIO_NOPULL;
 
-    HAL_GPIO_Init(adc_soc_base, &adc_init);
+    HAL_GPIO_Init(adc_soc_base, &g_adc_pin);
 
     /* ADC instance */
     if (!ADC_Instance_Init_Status[inst])
@@ -124,8 +126,6 @@ hwADC_OpStatus hwADC_Channel_Init(hwADC_Channel_Index ch)
                 __HAL_RCC_ADC3_CLK_ENABLE();
                 g_adc[inst].Instance = ADC3;
                 break;
-            default:
-                return;
         }
 
         g_adc[inst].Init.Resolution            = ADC_RESOLUTION_12B;
@@ -267,3 +267,5 @@ hwADC_OpStatus hwADC_Read_MiniVolt(hwADC_Channel_Index ch, float *readMv)
 
     return hwADC_OK;
 }
+
+#endif //STM32

@@ -3,8 +3,6 @@
 #define I2C_MASTER_H
 
 #include "I2C_Index.h"
-#include "stdbool.h"
-#include "stdint.h"
 
 #include "NeonRTOS.h"
 

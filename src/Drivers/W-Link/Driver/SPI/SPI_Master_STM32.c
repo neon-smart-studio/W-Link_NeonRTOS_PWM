@@ -390,6 +390,11 @@ hwSPI_OpResult SPI_Master_Init(hwSPI_Index index, uint32_t clock_rate_hz, hwSPI_
 
         if(HAL_SPI_Init(&g_spi[index])!=HAL_OK)
         {
+                NeonRTOS_LockObjDelete(&Spi_Master_Access_Mutex[index]);
+
+                NeonRTOS_SyncObjDelete(&Spi_Master_Send_SyncHandle[index]);
+                NeonRTOS_SyncObjDelete(&Spi_Master_Recv_SyncHandle[index]);
+
                 return hwSPI_HwError;
         }
         

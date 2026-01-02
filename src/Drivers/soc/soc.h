@@ -29,6 +29,10 @@
 #include "stm32f2xx_hal_spi.h"
 #include "stm32f2xx_hal_i2c.h"
 #include "stm32f2xx_hal_dma.h"
+#include "stm32f2xx_hal_rtc.h"
+#include "stm32f2xx_hal_adc.h"
+#include "stm32f2xx_hal_can.h"
+#include "stm32f2xx_hal_dac.h"
 #define STM32
 #endif //STM32F2
 
@@ -43,6 +47,10 @@
 #include "stm32f7xx_hal_spi.h"
 #include "stm32f7xx_hal_i2c.h"
 #include "stm32f7xx_hal_dma.h"
+#include "stm32f7xx_hal_rtc.h"
+#include "stm32f7xx_hal_adc.h"
+#include "stm32f7xx_hal_can.h"
+#include "stm32f7xx_hal_dac.h"
 #define STM32
 #endif //STM32F7
 
@@ -57,6 +65,10 @@
 #include "stm32h7xx_hal_spi.h"
 #include "stm32h7xx_hal_i2c.h"
 #include "stm32h7xx_hal_dma.h"
+#include "stm32h7xx_hal_rtc.h"
+#include "stm32h7xx_hal_adc.h"
+#include "stm32h7xx_hal_can.h"
+#include "stm32h7xx_hal_dac.h"
 #define STM32
 #endif //STM32H7
 

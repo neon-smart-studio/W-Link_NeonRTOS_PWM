@@ -737,6 +737,7 @@ hwI2C_OpResult I2C_Master_Init(hwI2C_Index index, hwI2C_Speed_Mode speed_mode)
 
     if(HAL_I2C_Init(&g_i2c[index])!=HAL_OK)
     {
+        NeonRTOS_SyncObjDelete(&I2C_Master_Done_SyncHandle[index]);
         return hwI2C_HwError;
     }
 
@@ -860,6 +861,8 @@ hwI2C_OpResult I2C_Master_DeInit(hwI2C_Index index)
             break;
 #endif
     }
+
+    NeonRTOS_SyncObjDelete(&I2C_Master_Done_SyncHandle[index]);
 
     HAL_GPIO_DeInit(sda_soc_base, sda_soc_pin);
     HAL_GPIO_DeInit(scl_soc_base, scl_soc_pin);
