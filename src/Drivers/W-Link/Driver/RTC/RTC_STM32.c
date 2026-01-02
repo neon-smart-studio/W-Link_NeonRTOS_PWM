@@ -15,7 +15,7 @@
 static RTC_HandleTypeDef g_rtc[hwRTC_Index_MAX];
 
 static bool RTC_HW_Init_Status[hwRTC_Index_MAX] = {false};
-NeonRTOS_LockObj_t rtc_access_mutex[hwRTC_Index_MAX];
+static NeonRTOS_LockObj_t rtc_access_mutex[hwRTC_Index_MAX];
 
 #ifdef RTC_SUPPORT_ALARM
 onAlarmEventCallback Alarm_Event_Callback[hwRTC_Alarm_Channel_Index_MAX] = {NULL};
@@ -108,7 +108,6 @@ hwRTC_OpResult RTC_Timer_Init(hwRTC_Index index)
 	{
         return hwRTC_MemoryError;
 	}
-
     NeonRTOS_LockObjUnlock(&rtc_access_mutex[index]);
 
     __HAL_RCC_RTC_ENABLE();

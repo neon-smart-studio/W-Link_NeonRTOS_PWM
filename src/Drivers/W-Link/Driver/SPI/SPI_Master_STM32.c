@@ -35,7 +35,7 @@ NeonRTOS_SyncObj_t Spi_Master_Recv_SyncHandle[hwSPI_Index_MAX];
 static bool Spi_Master_Init_Status[hwSPI_Index_MAX] = {false};
 static bool Spi_Master_Use_CS[hwSPI_Index_MAX] = {false};
 
-SPI_HandleTypeDef g_spi[hwSPI_Index_MAX];
+static SPI_HandleTypeDef g_spi[hwSPI_Index_MAX];
 
 static const uint32_t Spi_Master_Baudrate_Prescaler_Table[] =  {SPI_BAUDRATEPRESCALER_2,
                                                                 SPI_BAUDRATEPRESCALER_4,

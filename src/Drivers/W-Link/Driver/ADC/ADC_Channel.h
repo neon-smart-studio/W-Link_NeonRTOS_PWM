@@ -2,8 +2,11 @@
 #ifndef ADC_CHANNEL_H
 #define ADC_CHANNEL_H
 
+#ifdef STM32
+
 typedef enum hwADC_Channel_Index_t
 {
+#if defined(ADC_BASE)
   hwADC_Channel_Index_0 = 0,
   hwADC_Channel_Index_1,
   hwADC_Channel_Index_2,
@@ -20,7 +23,10 @@ typedef enum hwADC_Channel_Index_t
   hwADC_Channel_Index_13,
   hwADC_Channel_Index_14,
   hwADC_Channel_Index_15,
+#endif
   hwADC_Channel_Index_MAX,
 }hwADC_Channel_Index;
+
+#endif //STM32
 
 #endif //ADC_CHANNEL_H

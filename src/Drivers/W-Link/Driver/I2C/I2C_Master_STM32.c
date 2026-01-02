@@ -152,7 +152,7 @@ static bool I2C_Master_Init_Status[hwI2C_Index_MAX] = {false};
 static hwI2C_Speed_Mode I2C_Clock_Speed_Mode[hwI2C_Index_MAX] = {hwI2C_Standard_Mode};
 static NeonRTOS_SyncObj_t I2C_Master_Done_SyncHandle[hwI2C_Index_MAX];
 
-I2C_HandleTypeDef g_i2c[hwI2C_Index_MAX];
+static I2C_HandleTypeDef g_i2c[hwI2C_Index_MAX];
 
 #ifdef STM32_I2C_NEW_ARCH
 uint32_t I2C_Get_PCLK(hwI2C_Index index)

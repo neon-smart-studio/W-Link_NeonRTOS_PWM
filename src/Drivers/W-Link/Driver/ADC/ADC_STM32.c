@@ -15,6 +15,9 @@
 
 #ifdef STM32
 
+#define ADC_IRQ_NVIC_PRIORITY 5
+#define ADC_IRQ_NVIC_SUB_PRIORITY 0
+
 #define ADC_VREF_MV     3300.0f
 #define ADC_MAX_COUNT   4095.0f
 
@@ -24,10 +27,12 @@ typedef struct {
     uint32_t       raw;
 } ADC_QueueItem;
 
-static ADC_HandleTypeDef g_adc[hwADC_Instance_MAX];
+static bool ADC_NVIC_Init_Status = false;
 static bool ADC_Instance_Init_Status[hwADC_Instance_MAX];
 static bool ADC_Channel_Init_Status[hwADC_Channel_Index_MAX] = {false};
 static NeonRTOS_MsgQ_t ADC_Channel_SyncQueue[hwADC_Instance_MAX] = {NULL};
+
+static ADC_HandleTypeDef g_adc[hwADC_Instance_MAX];
 
 static uint32_t ADC_Channel_To_HAL(hwADC_Channel_Index ch)
 {
@@ -84,10 +89,10 @@ hwADC_OpStatus hwADC_Channel_Init(hwADC_Channel_Index ch)
             return hwADC_InvalidParameter;
     }
 
-    GPIO_TypeDef * adc_soc_base = GPIO_Map_Soc_Base(ADC_Channel_Def_Table[ch].adc_pin);
+    GPIO_TypeDef * adc_pin_soc_base = GPIO_Map_Soc_Base(ADC_Channel_Def_Table[ch].adc_pin);
     uint16_t adc_soc_pin = GPIO_Map_Soc_Pin(ADC_Channel_Def_Table[ch].adc_pin);
 
-    if(adc_soc_pin==0 || adc_soc_base==NULL)
+    if(adc_soc_pin==0 || adc_pin_soc_base==NULL)
     {
             return hwADC_InvalidParameter;
     }
@@ -100,14 +105,14 @@ hwADC_OpStatus hwADC_Channel_Init(hwADC_Channel_Index ch)
         }
     }
 
-    GPIO_Enable_RCC_Clock(adc_soc_base);
+    GPIO_Enable_RCC_Clock(adc_pin_soc_base);
 
     GPIO_InitTypeDef g_adc_pin = {0};
     g_adc_pin.Pin  = adc_soc_pin;
     g_adc_pin.Mode = GPIO_MODE_ANALOG;
     g_adc_pin.Pull = GPIO_NOPULL;
 
-    HAL_GPIO_Init(adc_soc_base, &g_adc_pin);
+    HAL_GPIO_Init(adc_pin_soc_base, &g_adc_pin);
 
     /* ADC instance */
     if (!ADC_Instance_Init_Status[inst])
@@ -138,7 +143,17 @@ hwADC_OpStatus hwADC_Channel_Init(hwADC_Channel_Index ch)
 
         if(HAL_ADC_Init(&g_adc[inst])!=HAL_OK)
         {
+            NeonRTOS_MsgQDelete(&ADC_Channel_SyncQueue[inst]);
+
             return hwADC_HwError;
+        }
+
+        if(!ADC_NVIC_Init_Status)
+        {
+            HAL_NVIC_SetPriority(ADC_IRQn, ADC_IRQ_NVIC_PRIORITY, ADC_IRQ_NVIC_SUB_PRIORITY);
+            HAL_NVIC_EnableIRQ(ADC_IRQn);
+
+            ADC_NVIC_Init_Status = true;
         }
 
         ADC_Instance_Init_Status[inst] = true;
@@ -169,31 +184,33 @@ hwADC_OpStatus hwADC_Channel_DeInit(hwADC_Channel_Index ch)
         return hwADC_OK;
     }
 
-    GPIO_TypeDef * adc_soc_base = GPIO_Map_Soc_Base(ADC_Channel_Def_Table[ch].adc_pin);
+    GPIO_TypeDef * adc_pin_soc_base = GPIO_Map_Soc_Base(ADC_Channel_Def_Table[ch].adc_pin);
     uint16_t adc_soc_pin = GPIO_Map_Soc_Pin(ADC_Channel_Def_Table[ch].adc_pin);
 
-    if(adc_soc_pin==0 || adc_soc_base==NULL)
+    if(adc_soc_pin==0 || adc_pin_soc_base==NULL)
     {
             return hwADC_InvalidParameter;
     }
 
     ADC_Channel_Init_Status[ch] = false;
 
+    bool inst_used = false;
+
     /* 檢查 instance 是否還有人在用 */
     for (hwADC_Instance inst = 0; inst < hwADC_Instance_MAX; inst++)
     {
-        bool used = false;
+        bool ch_used = false;
 
         for (size_t i = 0; i < hwADC_Channel_Index_MAX; i++)
         {
             if (ADC_Channel_Init_Status[i])
             {
-                used = true;
+                ch_used = true;
                 break;
             }
         }
 
-        if (!used && ADC_Instance_Init_Status[inst])
+        if (!ch_used && ADC_Instance_Init_Status[inst])
         {
             HAL_ADC_DeInit(&g_adc[inst]);
 
@@ -208,9 +225,21 @@ hwADC_OpStatus hwADC_Channel_DeInit(hwADC_Channel_Index ch)
             
             NeonRTOS_MsgQDelete(&ADC_Channel_SyncQueue[inst]);
         }
+        
+        if(ADC_Instance_Init_Status[inst])
+        {
+            inst_used = true;
+        }
     }
 
-    HAL_GPIO_DeInit(adc_soc_base, adc_soc_pin);
+    if(!inst_used && ADC_NVIC_Init_Status)
+    {
+        HAL_NVIC_DisableIRQ(ADC_IRQn);
+        
+        ADC_NVIC_Init_Status = false;
+    }
+
+    HAL_GPIO_DeInit(adc_pin_soc_base, adc_soc_pin);
 
     gpio_pin_init_status[ADC_Channel_Def_Table[ch].adc_pin] = false;
 
