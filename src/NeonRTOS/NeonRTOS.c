@@ -1,10 +1,3 @@
-/*
- * This file is derived from Texas Instruments CC3200 SDK
- * osi_freertos.c and has been modified and extended.
- *
- * Original Copyright (c) Texas Instruments
- * License: TI BSD-like license (see LICENSE_TI.txt)
- */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -311,9 +304,9 @@ void NeonRTOS_TaskResume(NeonRTOS_TaskHandle* pTaskHandle)
 	vTaskResume((TaskHandle_t)*pTaskHandle);
 }
 
-NeonRTOS_Time_t NeonRTOS_TaskGetMillis()
+NeonRTOS_Time_t NeonRTOS_TaskGetTickCount()
 {
-	return xTaskGetTickCount() * portTICK_PERIOD_MS;
+	return xTaskGetTickCount();
 }
 
 NeonRTOS_ReturnVal_e NeonRTOS_LockObjDelete(NeonRTOS_LockObj_t* pLockObj)
@@ -377,9 +370,11 @@ NeonRTOS_ReturnVal_e NeonRTOS_MsgQCreate(NeonRTOS_MsgQ_t* 		pMsgQ ,
 	{
 		return NeonRTOS_OPERATION_FAILED;
 	}
-        vQueueAddToRegistry(*pMsgQ, pMsgQName);
-
+	
 	*pMsgQ = (NeonRTOS_MsgQ_t)handle;
+
+    vQueueAddToRegistry(*pMsgQ, pMsgQName);
+
 	return NeonRTOS_OK;
 }
 

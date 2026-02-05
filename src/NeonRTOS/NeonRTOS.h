@@ -91,7 +91,7 @@ void NeonRTOS_TaskDelete(NeonRTOS_TaskHandle* pTaskHandle);
 void NeonRTOS_TaskSuspend(NeonRTOS_TaskHandle* pTaskHandle);
 void NeonRTOS_TaskResume(NeonRTOS_TaskHandle* pTaskHandle);
 void NeonRTOS_TaskSetPriority(NeonRTOS_TaskHandle* pTaskHandle, unsigned long uxPriority);
-NeonRTOS_Time_t NeonRTOS_TaskGetMillis();
+NeonRTOS_Time_t NeonRTOS_TaskGetTickCount();
 
 NeonRTOS_ReturnVal_e NeonRTOS_TimerCreate(NeonRTOS_TimerHandle* pTimerHandle, const signed char * const pcTimerName, NeonRTOS_Time_t periodMs, unsigned int autoLoad, unsigned int uTimerID, NeonRTOS_TimerCallbackFunction_t pCallbackFunction);
 void NeonRTOS_TimerDelete(NeonRTOS_TimerHandle* pTimerHandle);
